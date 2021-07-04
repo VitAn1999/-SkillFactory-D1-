@@ -1,4 +1,6 @@
 auth_params = {
-    'api_key': '6bd3c8721ff7e53dd9aa0436bc38ddf3',
-    'token': '111aed5db913f8103ad32247638ec0926dab73e534058e550bd51d6d1fc8912c'
+    'key': '6bd3c8721ff7e53dd9aa0436bc38ddf3',
+    'token': 'a8e7e7a952af736259f39b8e68ada9a5315b0228a9a119250e0180533f1bb096'
 }
+
+board_id = 'Na5SiDgw'
