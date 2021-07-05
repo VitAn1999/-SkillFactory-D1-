@@ -5,12 +5,16 @@ import sys
 
 base_url = 'https://api.trello.com/1/{}'
 
+# Получаем полное id нашей доски
+full_board_id = requests.get(base_url.format('boards') + '/' + board_id, params=auth_params).json()['id']
+
 
 def read():
+    print(board_data)
     column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params).json()
     for column in column_data:
-        print(column['name'])
         task_data = requests.get(base_url.format('lists') + '/' + column['id'] + '/cards', params=auth_params).json()
+        print(column['name'], f'({len(task_data)}):')
         if not task_data:
             print('\t' + 'Нет задач')
             continue
@@ -58,6 +62,14 @@ def move(name, column_name):
             print('Такой колонки не существует, проверьте правильность введенных данных')
 
 
+def create_column(name):
+    post_column = requests.post(base_url.format('lists'), {'name': name, 'idBoard': full_board_id, **auth_params})
+    if post_column.status_code == requests.codes.ok:
+        print(f'Колонка {name} успешно добавлена на доску')
+    else:
+        post_column.raise_for_status()
+
+
 if __name__ == "__main__":
     if len(sys.argv) <= 2:
         read()
@@ -65,5 +77,7 @@ if __name__ == "__main__":
         create(sys.argv[2], sys.argv[3])
     elif sys.argv[1] == 'move':
         move(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == 'create_column':
+        create_column(sys.argv[2])
     else:
         print('Проверьте правильность введенной команды')

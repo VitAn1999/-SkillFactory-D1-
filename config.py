@@ -4,3 +4,4 @@ auth_params = {
 }
 
 board_id = 'Na5SiDgw'
+full_id = '60e20d19ca88787370e13871'
