@@ -9,8 +9,8 @@ base_url = 'https://api.trello.com/1/{}'
 full_board_id = requests.get(base_url.format('boards') + '/' + board_id, params=auth_params).json()['id']
 
 
+# Функция отображающая доску и поставленные задачи
 def read():
-    print(board_data)
     column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params).json()
     for column in column_data:
         task_data = requests.get(base_url.format('lists') + '/' + column['id'] + '/cards', params=auth_params).json()
@@ -21,7 +21,8 @@ def read():
         for task in task_data:
             print('\t' + task['name'])
 
-        
+
+# Функция создания новой задачи        
 def create(name, column_name):
     column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params).json()
 
@@ -37,24 +38,29 @@ def create(name, column_name):
             print('Такой колонки не существует, проверьте правильность введенных данных')
 
 
+# Функция перемещения задачи в другие колонки
 def move(name, column_name):
     column_data = requests.get(base_url.format('boards') + '/' + board_id + '/lists', params=auth_params).json()
+    task_ids = {}
     task_id = None
 
     for column in column_data:
         column_tasks = requests.get(base_url.format('lists') + '/' + column['id'] + '/cards', params=auth_params).json()
         for task in column_tasks:
-            if task['name'] == name:
-                task_id = task['id']
-                break
-        if task_id:
-            break
-
+            if task['name'] == name: 
+                task_ids[task['id']] = column['name']
+                continue
+    if len(task_ids) == 1:
+        for key in task_ids.keys():
+            task_id = key
+    else:
+        task_id = check_task_name(name, task_ids)
+            
     for index, column in enumerate(column_data):
         if column['name'] == column_name:
             put_card = requests.put(base_url.format('cards') + '/' + task_id + '/idList', data={'value': column['id'], **auth_params})
             if put_card.status_code == requests.codes.ok:
-                print(f'Задача {name} успешно перенесена в {column_name}')
+                print(f'Задача {name} успешно перенесена в колонку {column_name}')
             else:
                 put_card.raise_for_status()
             break
@@ -62,12 +68,28 @@ def move(name, column_name):
             print('Такой колонки не существует, проверьте правильность введенных данных')
 
 
+# Функция создания новой колонки
 def create_column(name):
     post_column = requests.post(base_url.format('lists'), {'name': name, 'idBoard': full_board_id, **auth_params})
     if post_column.status_code == requests.codes.ok:
         print(f'Колонка {name} успешно добавлена на доску')
     else:
         post_column.raise_for_status()
+
+
+# Функция проверки имени задачи
+def check_task_name(name, task_ids):
+    print('\nНа доске есть несколько задач с одинаковым именем: ')
+
+    for index, key in enumerate(task_ids.keys()):
+        print(f'{index + 1}. Задача {name} c id {key} в колонке {task_ids[key]}')
+    task_number = input('Укажите порядковый номер нужной: \n')
+
+    for index, key in enumerate(task_ids.keys()):
+        if str(index + 1) == task_number:
+            return key
+    print('Указан несуществующий номер. Повторите попытку.')
+    return check_task_name(name, task_ids)
 
 
 if __name__ == "__main__":
